@@ -9,16 +9,21 @@ import (
 )
 
 func CreateToken(mobile string) (string, error) {
-	JWT_SECRET_KEY := os.Getenv("JWT_SECRET_KEY")
+	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
+	if jwtSecretKey == "" {
+		return "", fmt.Errorf("JWT_SECRET_KEY environment variable not set")
+	}
+
+	secretKeyBytes := []byte(jwtSecretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": mobile,
+		"mobile": mobile,
 		"exp":    time.Now().Add(24 * time.Hour).Unix(),
 	})
 
-	tokenString, err := token.SignedString(JWT_SECRET_KEY)
+	tokenString, err := token.SignedString(secretKeyBytes)
 	if err != nil {
-		return "", fmt.Errorf("Error signing the token: %v", err)
+		return "", fmt.Errorf("error signing the token: %v", err)
 	}
 
 	return tokenString, nil

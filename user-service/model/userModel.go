@@ -44,4 +44,3 @@ type LoginUserResponse struct {
 	Message string `json:"message" bson:"message"`
 	Token   string `json:"token" bson:"token"`
 }
-

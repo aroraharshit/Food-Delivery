@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
@@ -105,7 +104,7 @@ func (us *userServiceImpl) RegisterUser(req *model.RegisterUserRequest) (*model.
 		}, nil
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hashedPassword, err := utils.HashedPassword(req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("Error while hashing password %v", err)
 	}
@@ -185,6 +184,7 @@ func (us *userServiceImpl) LoginUser(req *model.LoginUserRequest) (*model.LoginU
 	if err != nil {
 		return nil, fmt.Errorf("error generating token %v", err)
 	}
+	
 
 	return &model.LoginUserResponse{
 		Message: "Successfully Login",

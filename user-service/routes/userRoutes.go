@@ -18,5 +18,6 @@ func NewUserRouteController(userController *controller.UserController) UserRoute
 func (uc *UserRouteController) RegisterUser(rg *gin.RouterGroup, userService service.UserService) {
 	router := rg.Group("users")
 	router.POST("/registerUser", uc.UserController.RegisterUser)
-	router.POST("/login",uc.UserController.LoginUser)
+	// router.Use(middleware.JWTAuthMiddleware())
+	router.POST("/login", uc.UserController.LoginUser)
 }
