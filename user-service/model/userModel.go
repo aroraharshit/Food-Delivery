@@ -2,8 +2,6 @@ package model
 
 import (
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Register User
@@ -21,7 +19,6 @@ type RegistertUserInsertion struct {
 	Password  string    `json:"password" bson:"password"`
 	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
-	Id        primitive.ObjectID
 }
 
 type RegisterUserResponse struct {

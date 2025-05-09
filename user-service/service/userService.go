@@ -15,29 +15,27 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(*model.RegisterUserRequest) (*model.RegisterUserResponse, error)
-	UserExists(email string, mobile string) (bool, error)
-	LoginUser(*model.LoginUserRequest) (*model.LoginUserResponse, error)
+	RegisterUser(context.Context,*model.RegisterUserRequest) (*model.RegisterUserResponse, error)
+	UserExists(ctx context.Context,email string, mobile string) (bool, error)
+	LoginUser(context.Context,*model.LoginUserRequest) (*model.LoginUserResponse, error)
 }
 
 type UserServiceOptions struct {
+	ctx context.Context
 	UserCollection *mongo.Collection
 }
 
-type userServiceImpl struct {
+type UserServiceImpl struct {
 	opts UserServiceOptions
 }
 
 func NewUserService(opts UserServiceOptions) UserService {
-	return &userServiceImpl{
+	return &UserServiceImpl{
 		opts: opts,
 	}
 }
 
-func (us *userServiceImpl) UserExists(email string, mobileNumber string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (us *UserServiceImpl) UserExists(ctx context.Context,email string, mobileNumber string) (bool, error) {
 	pipeline := bson.A{
 		bson.M{
 			"$match": bson.M{
@@ -89,11 +87,8 @@ func (us *userServiceImpl) UserExists(email string, mobileNumber string) (bool, 
 	return result[0].UserExists, nil
 }
 
-func (us *userServiceImpl) RegisterUser(req *model.RegisterUserRequest) (*model.RegisterUserResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	userExist, err := us.UserExists(req.Email, req.Mobile)
+func (us *UserServiceImpl) RegisterUser(ctx context.Context,req *model.RegisterUserRequest) (*model.RegisterUserResponse, error) {
+	userExist, err := us.UserExists(ctx,req.Email, req.Mobile)
 	if err != nil {
 		return nil, fmt.Errorf("Error checking if user exists or not: %v", err)
 	}
@@ -116,7 +111,7 @@ func (us *userServiceImpl) RegisterUser(req *model.RegisterUserRequest) (*model.
 		Password:  string(hashedPassword),
 		UpdatedAt: time.Now(),
 		CreatedAt: time.Now(),
-		Id:        primitive.NewObjectID(),
+
 	}
 
 	insertResult, err := us.opts.UserCollection.InsertOne(ctx, user)
@@ -132,10 +127,7 @@ func (us *userServiceImpl) RegisterUser(req *model.RegisterUserRequest) (*model.
 	return response, nil
 }
 
-func (us *userServiceImpl) GetPasswordByNumber(mobile string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+func (us *UserServiceImpl) GetPasswordByNumber(ctx context.Context,mobile string) (string, error) {
 	var result struct {
 		Password string `bson:"password"`
 	}
@@ -151,11 +143,8 @@ func (us *userServiceImpl) GetPasswordByNumber(mobile string) (string, error) {
 	return result.Password, nil
 }
 
-func (us *userServiceImpl) LoginUser(req *model.LoginUserRequest) (*model.LoginUserResponse, error) {
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	userExist, err := us.UserExists(req.Email, req.Mobile)
+func (us *UserServiceImpl) LoginUser(ctx context.Context,req *model.LoginUserRequest) (*model.LoginUserResponse, error) {
+	userExist, err := us.UserExists(ctx,req.Email, req.Mobile)
 	if err != nil {
 		return nil, fmt.Errorf("error checking if user exists or not: %v", err)
 	}
@@ -167,7 +156,7 @@ func (us *userServiceImpl) LoginUser(req *model.LoginUserRequest) (*model.LoginU
 		}, nil
 	}
 
-	storedPassword, err := us.GetPasswordByNumber(req.Mobile)
+	storedPassword, err := us.GetPasswordByNumber(ctx,req.Mobile)
 	if err != nil {
 		return nil, fmt.Errorf("error getting password from database %v", err)
 	}

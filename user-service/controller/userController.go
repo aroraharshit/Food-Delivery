@@ -17,6 +17,7 @@ func NewUserController(userService service.UserService) *UserController {
 }
 
 func (uc *UserController) RegisterUser(c *gin.Context) {
+	ctx := c.Request.Context()
 	var req model.RegisterUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -24,7 +25,7 @@ func (uc *UserController) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	response, err := uc.userService.RegisterUser(&req)
+	response, err := uc.userService.RegisterUser(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -34,6 +35,7 @@ func (uc *UserController) RegisterUser(c *gin.Context) {
 }
 
 func (uc *UserController) LoginUser(c *gin.Context) {
+	ctx := c.Request.Context()
 	var req model.LoginUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -41,7 +43,7 @@ func (uc *UserController) LoginUser(c *gin.Context) {
 		return
 	}
 
-	response, err := uc.userService.LoginUser(&req)
+	response, err := uc.userService.LoginUser(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}

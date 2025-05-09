@@ -16,65 +16,70 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func ConnectToMongoDB() *mongo.Collection {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+var (
+	DBName string
+)
 
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system environment variables")
+	}
+}
+
+func connectMongoDB(ctx context.Context) (*mongo.Client, error) {
 	mongoURL := os.Getenv("MONGODB_URL")
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURL))
-	if err != nil {
-		log.Fatal(err)
+	if mongoURL == "" {
+		return nil, fmt.Errorf("MONGODB_URL not set")
 	}
 
-	startTime := time.Now()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
-	defer cancel()
-
-	err = client.Connect(ctx)
+	clientOpts := options.Client().ApplyURI(mongoURL)
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to create MongoDB client: %w", err)
 	}
 
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal(err)
+	if err := client.Ping(ctx, nil); err != nil {
+		return nil, fmt.Errorf("MongoDB ping failed: %w", err)
 	}
 
-	duration := time.Since(startTime)
+	DBName = os.Getenv("MONGO_DB_NAME")
+	if DBName == "" {
+		return nil, fmt.Errorf("MONGO_DB_NAME not set")
+	}
 
-	fmt.Printf("Connected to MongoDB in %s\n", duration)
-
-	dbName := os.Getenv("MONGO_DB_NAME")
-	collection := client.Database(dbName).Collection("users")
-	fmt.Println("Connected to MongoDB")
-	return collection
+	log.Println("Successfully connected to MongoDB")
+	return client, nil
 }
 
 func main() {
-	router := gin.Default()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	userCollection := ConnectToMongoDB()
+	client, err := connectMongoDB(ctx)
+	if err != nil {
+		log.Fatalf("MongoDB connection error: %v", err)
+	}
+
+	userCollection := client.Database("DBName").Collection("users")
+
+	userService := service.NewUserService(service.UserServiceOptions{
+		UserCollection: userCollection,
+	})
+
+	userController := controller.NewUserController(userService)
+
+	userRouteController := routes.NewUserRouteController(userController)
+
+	router := gin.Default()
+	api := router.Group("/v1")
+	userRouteController.RegisterUser(api, userService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
 	}
-
-	// user collection
-	userService := service.NewUserService(service.UserServiceOptions{
-		UserCollection: userCollection,
-	})
-	userController := controller.NewUserController(userService)
-	userRouterController := routes.NewUserRouteController(userController)
-
-	api := router.Group("/v1")
-	userRouterController.RegisterUser(api, userService)
-
-	fmt.Println("Server started at :", port)
-	router.Run(":" + port)
-
+	log.Printf("Server is running on port %s\n", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
 }
