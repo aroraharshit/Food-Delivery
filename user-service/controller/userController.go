@@ -5,7 +5,7 @@ import (
 	"user-service/model"
 	"user-service/service"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"	
 )
 
 type UserController struct {
