@@ -20,5 +20,5 @@ func NewRestuarantRouteController(restuarantController *controller.RestaurantCon
 func (rc *NewRestaurantRoutesController) RestaurantRoutes(rg *gin.RouterGroup, restaurantService service.RestaurantService) {
 	router := rg.Group("restaurants")
 	router.POST("/restaurants", rc.RestaurantController.AddRestaurant)
-	router.GET("/restaurants", rc.RestaurantController.GetRestaurantsByLocation)
+	router.POST("/getRestaurants", rc.RestaurantController.GetRestaurantsByLocation)
 }

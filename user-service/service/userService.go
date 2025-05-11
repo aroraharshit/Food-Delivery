@@ -15,13 +15,13 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(context.Context,*model.RegisterUserRequest) (*model.RegisterUserResponse, error)
-	UserExists(ctx context.Context,email string, mobile string) (bool, error)
-	LoginUser(context.Context,*model.LoginUserRequest) (*model.LoginUserResponse, error)
+	RegisterUser(context.Context, *model.RegisterUserRequest) (*model.RegisterUserResponse, error)
+	UserExists(ctx context.Context, email string, mobile string) (bool, error)
+	LoginUser(context.Context, *model.LoginUserRequest) (*model.LoginUserResponse, error)
 }
 
 type UserServiceOptions struct {
-	ctx context.Context
+	ctx            context.Context
 	UserCollection *mongo.Collection
 }
 
@@ -35,7 +35,7 @@ func NewUserService(opts UserServiceOptions) UserService {
 	}
 }
 
-func (us *UserServiceImpl) UserExists(ctx context.Context,email string, mobileNumber string) (bool, error) {
+func (us *UserServiceImpl) UserExists(ctx context.Context, email string, mobileNumber string) (bool, error) {
 	pipeline := bson.A{
 		bson.M{
 			"$match": bson.M{
@@ -87,8 +87,8 @@ func (us *UserServiceImpl) UserExists(ctx context.Context,email string, mobileNu
 	return result[0].UserExists, nil
 }
 
-func (us *UserServiceImpl) RegisterUser(ctx context.Context,req *model.RegisterUserRequest) (*model.RegisterUserResponse, error) {
-	userExist, err := us.UserExists(ctx,req.Email, req.Mobile)
+func (us *UserServiceImpl) RegisterUser(ctx context.Context, req *model.RegisterUserRequest) (*model.RegisterUserResponse, error) {
+	userExist, err := us.UserExists(ctx, req.Email, req.Mobile)
 	if err != nil {
 		return nil, fmt.Errorf("Error checking if user exists or not: %v", err)
 	}
@@ -111,7 +111,6 @@ func (us *UserServiceImpl) RegisterUser(ctx context.Context,req *model.RegisterU
 		Password:  string(hashedPassword),
 		UpdatedAt: time.Now(),
 		CreatedAt: time.Now(),
-
 	}
 
 	insertResult, err := us.opts.UserCollection.InsertOne(ctx, user)
@@ -127,7 +126,7 @@ func (us *UserServiceImpl) RegisterUser(ctx context.Context,req *model.RegisterU
 	return response, nil
 }
 
-func (us *UserServiceImpl) GetPasswordByNumber(ctx context.Context,mobile string) (string, error) {
+func (us *UserServiceImpl) GetPasswordByNumber(ctx context.Context, mobile string) (string, error) {
 	var result struct {
 		Password string `bson:"password"`
 	}
@@ -143,8 +142,8 @@ func (us *UserServiceImpl) GetPasswordByNumber(ctx context.Context,mobile string
 	return result.Password, nil
 }
 
-func (us *UserServiceImpl) LoginUser(ctx context.Context,req *model.LoginUserRequest) (*model.LoginUserResponse, error) {
-	userExist, err := us.UserExists(ctx,req.Email, req.Mobile)
+func (us *UserServiceImpl) LoginUser(ctx context.Context, req *model.LoginUserRequest) (*model.LoginUserResponse, error) {
+	userExist, err := us.UserExists(ctx, req.Email, req.Mobile)
 	if err != nil {
 		return nil, fmt.Errorf("error checking if user exists or not: %v", err)
 	}
@@ -156,7 +155,7 @@ func (us *UserServiceImpl) LoginUser(ctx context.Context,req *model.LoginUserReq
 		}, nil
 	}
 
-	storedPassword, err := us.GetPasswordByNumber(ctx,req.Mobile)
+	storedPassword, err := us.GetPasswordByNumber(ctx, req.Mobile)
 	if err != nil {
 		return nil, fmt.Errorf("error getting password from database %v", err)
 	}
@@ -173,7 +172,6 @@ func (us *UserServiceImpl) LoginUser(ctx context.Context,req *model.LoginUserReq
 	if err != nil {
 		return nil, fmt.Errorf("error generating token %v", err)
 	}
-	
 
 	return &model.LoginUserResponse{
 		Message: "Successfully Login",

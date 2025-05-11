@@ -36,22 +36,27 @@ type AddRestaurantResponse struct {
 // Get Restaurants
 type GetRestauranstByLocationRequest struct {
 	UserLocation GeoJSON `json:"userLocation" bson:"userLocation" binding:"required"`
+	SortBy       string  `json:"sortBy" bson:"sortBy"`
+	OrderBy      int     `json:"orderBy" bson:"orderBy"`
+	Distance     float64 `json:"distance" bson:"distance"`
+	IsOpen       bool    `json:"isOpen" bson:"isOpen"`
 }
 
 type GetRestauranstByLocation struct {
-	RestaurantId   primitive.ObjectID   `json:"_id" bson:"_id"`
-	RestaurantName string               `json:"name" bson:"name"`
-	Address        string               `json:"address" bson:"address"`
-	OpeningTime    primitive.DateTime   `json:"openingTime" bson:"openingTime"`
-	ClosingTime    primitive.DateTime   `json:"closingTime" bson:"closingTime"`
-	IsOpen         bool                 `json:"isOpen" bson:"isOpen"`
-	DistanceInKms  float64 `json:"distanceInKms" bson:"distanceInKms"`
+	RestaurantId   primitive.ObjectID `json:"_id" bson:"_id"`
+	RestaurantName string             `json:"name" bson:"name"`
+	Address        string             `json:"address" bson:"address"`
+	OpeningTime    any             `json:"openingTime" bson:"openingTime"`
+	ClosingTime    any             `json:"closingTime" bson:"closingTime"`
+	IsOpen         bool               `json:"isOpen" bson:"isOpen"`
+	DistanceInKms  float64            `json:"distanceInKms" bson:"distanceInKms"`
 }
 
 type GetRestauranstByLocationResponse struct {
 	Restaurants []GetRestauranstByLocation `json:"restaurants" bson:"restaurants"`
 }
 
+// menuItems
 type MenuItem struct {
 	Id           primitive.ObjectID `json:"_id" bson:"_id"`
 	RestaurantId primitive.ObjectID `json:"restaurant_id" bson:"restaurant_id" bindind:"required"`

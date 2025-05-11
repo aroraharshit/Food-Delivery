@@ -1,0 +1,78 @@
+basePath: /
+definitions:
+  models.GeoJSON:
+    properties:
+      coordinates:
+        items:
+          type: number
+        type: array
+      type:
+        type: string
+    type: object
+  models.GetRestauranstByLocation:
+    properties:
+      _id:
+        type: string
+      address:
+        type: string
+      closingTime: {}
+      distanceInKms:
+        type: number
+      isOpen:
+        type: boolean
+      name:
+        type: string
+      openingTime: {}
+    type: object
+  models.GetRestauranstByLocationRequest:
+    properties:
+      distance:
+        type: number
+      isOpen:
+        type: boolean
+      orderBy:
+        type: integer
+      sortBy:
+        type: string
+      userLocation:
+        $ref: '#/definitions/models.GeoJSON'
+    required:
+    - userLocation
+    type: object
+  models.GetRestauranstByLocationResponse:
+    properties:
+      restaurants:
+        items:
+          $ref: '#/definitions/models.GetRestauranstByLocation'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API Server for Food Delivery App
+  title: Food Delivery API
+  version: "1.0"
+paths:
+  /v1/restaurants/getRestaurants:
+    post:
+      description: Returns all restaurants
+      parameters:
+      - description: Location and Filter Parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GetRestauranstByLocationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.GetRestauranstByLocationResponse'
+            type: array
+      summary: Get list of restuarants
+      tags:
+      - restuarants
+swagger: "2.0"

@@ -6,12 +6,15 @@ import (
 	"log"
 	"os"
 	"restaurant-service/controller"
+	_ "restaurant-service/docs"
 	"restaurant-service/routes"
 	"restaurant-service/service"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -52,6 +55,12 @@ func connectMongoDB(ctx context.Context) (*mongo.Client, error) {
 	return client, nil
 }
 
+// @title           Food Delivery API
+// @version         1.0
+// @description     API Server for Food Delivery App
+// @host            localhost:8080
+// @BasePath        /
+
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -73,6 +82,7 @@ func main() {
 	restaurantRouteController := routes.NewRestuarantRouteController(restaurantController)
 
 	router := gin.Default()
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := router.Group("/v1")
 	restaurantRouteController.RestaurantRoutes(api, restaurantService)
 

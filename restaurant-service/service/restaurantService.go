@@ -20,8 +20,8 @@ type RestaurantSevice interface {
 }
 
 type RestaurantServiceOptions struct {
-	ctx                  context.Context
 	RestaurantCollection *mongo.Collection
+	ctx                  context.Context
 }
 
 type RestaurantService struct {
@@ -68,11 +68,44 @@ func (rs *RestaurantService) AddRestaurant(ctx context.Context, req *models.AddR
 func (rs *RestaurantService) GetRestaurantByLocation(ctx context.Context, req *models.GetRestauranstByLocationRequest) (*models.GetRestauranstByLocationResponse, error) {
 	var response models.GetRestauranstByLocationResponse
 
+	sortByList := []string{"name", "distanceInKms"}
+	err := utils.ValidateValuesInList(sortByList, req.SortBy)
+	if err != nil {
+		return &models.GetRestauranstByLocationResponse{}, err
+	}
+	sortBy := req.SortBy
+
+	orderBy := req.OrderBy
+	if orderBy <= 0 {
+		orderBy = -1
+	} else {
+		orderBy = 1
+	}
+
 	locationType := req.UserLocation.Type
+	if locationType == "" {
+		return &models.GetRestauranstByLocationResponse{}, fmt.Errorf("location type cant be empty")
+	}
+
 	coordinates := req.UserLocation.Coordinates
+	if len(coordinates) != 2 {
+		return &models.GetRestauranstByLocationResponse{}, fmt.Errorf("please provide latitude and longitude")
+	}
+
 	lat := coordinates[0]
+	if lat == 0 {
+		return &models.GetRestauranstByLocationResponse{}, fmt.Errorf("please provide latitude")
+	}
+
 	long := coordinates[1]
-	distance := 5000
+	if long == 0 {
+		return &models.GetRestauranstByLocationResponse{}, fmt.Errorf("please provide longitude")
+	}
+
+	distance := req.Distance
+	if distance == 0 {
+		distance = 5000
+	}
 
 	pipeline := bson.A{bson.M{
 		"$geoNear": bson.M{
@@ -96,7 +129,21 @@ func (rs *RestaurantService) GetRestaurantByLocation(ctx context.Context, req *m
 					},
 				},
 			},
-		}}
+		},
+		bson.M{
+			"$sort": bson.M{
+				sortBy: orderBy,
+			},
+		},
+	}
+
+	if req.IsOpen {
+		pipeline = append(pipeline, bson.M{
+			"$match": bson.M{
+				"isOpen": true,
+			},
+		})
+	}
 
 	qry, _ := json.Marshal(pipeline)
 	fmt.Println(string(qry))
@@ -128,6 +175,7 @@ func (rs *RestaurantService) GetRestaurantByLocation(ctx context.Context, req *m
 	response = models.GetRestauranstByLocationResponse{
 		Restaurants: restaurants,
 	}
+	
 	return &response, nil
 
 }
