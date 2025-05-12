@@ -21,7 +21,7 @@ type UserService interface {
 }
 
 type UserServiceOptions struct {
-	ctx            context.Context
+	Ctx            context.Context
 	UserCollection *mongo.Collection
 }
 
