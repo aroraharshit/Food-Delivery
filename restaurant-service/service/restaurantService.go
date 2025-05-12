@@ -14,27 +14,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type RestaurantSevice interface {
+type RestaurantService interface {
 	AddRestaurant(context.Context, *models.AddRestaurantRequest) (*models.AddRestaurantResponse, error)
-	GetRestaurants(context.Context, *models.GetRestauranstByLocationRequest) (*models.GetRestauranstByLocationResponse, error)
+	GetRestaurantByLocation(context.Context, *models.GetRestauranstByLocationRequest) (*models.GetRestauranstByLocationResponse, error)
 }
 
 type RestaurantServiceOptions struct {
 	RestaurantCollection *mongo.Collection
-	ctx                  context.Context
+	Ctx                  context.Context
 }
 
-type RestaurantService struct {
+type RestaurantSeviceImpl struct {
 	opts RestaurantServiceOptions
 }
 
 func NewRestaurantService(opts RestaurantServiceOptions) RestaurantService {
-	return RestaurantService{
+	return &RestaurantSeviceImpl{
 		opts: opts,
 	}
 }
 
-func (rs *RestaurantService) AddRestaurant(ctx context.Context, req *models.AddRestaurantRequest) (*models.AddRestaurantResponse, error) {
+func (rs *RestaurantSeviceImpl) AddRestaurant(ctx context.Context, req *models.AddRestaurantRequest) (*models.AddRestaurantResponse, error) {
 
 	openingTime, err := utils.StringTimeToISO(req.OpeningTime)
 	if err != nil {
@@ -65,7 +65,7 @@ func (rs *RestaurantService) AddRestaurant(ctx context.Context, req *models.AddR
 	return &models.AddRestaurantResponse{Message: "Restuarant added", Id: res.InsertedID}, nil
 }
 
-func (rs *RestaurantService) GetRestaurantByLocation(ctx context.Context, req *models.GetRestauranstByLocationRequest) (*models.GetRestauranstByLocationResponse, error) {
+func (rs *RestaurantSeviceImpl) GetRestaurantByLocation(ctx context.Context, req *models.GetRestauranstByLocationRequest) (*models.GetRestauranstByLocationResponse, error) {
 	var response models.GetRestauranstByLocationResponse
 
 	sortByList := []string{"name", "distanceInKms"}
@@ -175,7 +175,7 @@ func (rs *RestaurantService) GetRestaurantByLocation(ctx context.Context, req *m
 	response = models.GetRestauranstByLocationResponse{
 		Restaurants: restaurants,
 	}
-	
+
 	return &response, nil
 
 }

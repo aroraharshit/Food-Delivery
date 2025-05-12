@@ -17,6 +17,8 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	utils "restaurant-service/utils"
 )
 
 var (
@@ -62,7 +64,7 @@ func connectMongoDB(ctx context.Context) (*mongo.Client, error) {
 // @BasePath        /
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
 	client, err := connectMongoDB(ctx)
@@ -70,21 +72,41 @@ func main() {
 		log.Fatalf("MongoDB connection error: %v", err)
 	}
 
-	restaurantCollection := client.Database(DBName).Collection("restaurant")
+	utils.IntiCloudinary()
 
+	//Collection Initialisation
+	restaurantCollection := client.Database(DBName).Collection("restaurant")
+	menuCollection := client.Database(DBName).Collection("menu")
+
+	//services initialisation
 	restaurantService := service.NewRestaurantService(
 		service.RestaurantServiceOptions{
+			Ctx:                  ctx,
 			RestaurantCollection: restaurantCollection,
 		},
 	)
-	restaurantController := controller.NewRestaurantController(restaurantService)
+	menuService := service.NewMenuService(service.MenuServiceOptions{
+		RestaurantCollection: restaurantCollection,
+		MenuCollection:       menuCollection,
+		Ctx:                  ctx,
+	},
+	)
 
+	//Controller initialisation
+	restaurantController := controller.NewRestaurantController(restaurantService)
+	menuContoller := controller.NewMenuController(menuService)
+
+	//Routes initialisation
 	restaurantRouteController := routes.NewRestuarantRouteController(restaurantController)
+	menuRouteController := routes.NewMenuRouteController(menuContoller)
 
 	router := gin.Default()
+	
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	api := router.Group("/v1")
 	restaurantRouteController.RestaurantRoutes(api, restaurantService)
+	menuRouteController.MenuRoutes(api, menuService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
