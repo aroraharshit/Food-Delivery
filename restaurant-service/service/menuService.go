@@ -40,6 +40,7 @@ func (ms *MenuServiceImpl) AddDishes(ctx context.Context, req *models.AddDishReq
 	if err != nil {
 		return &models.AddDishesResponse{}, err
 	}
+
 	isRestaurantExist, err := ms.IsRestaurantExist(ctx, req.RestaurantId)
 	if err != nil {
 		return &models.AddDishesResponse{}, err
@@ -51,7 +52,7 @@ func (ms *MenuServiceImpl) AddDishes(ctx context.Context, req *models.AddDishReq
 
 	dishesNames := []string{}
 	insertOps := []mongo.WriteModel{}
-
+  
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
@@ -80,6 +81,7 @@ func (ms *MenuServiceImpl) AddDishes(ctx context.Context, req *models.AddDishReq
 				Discount:  d.Discount,
 				CreatedAt: time.Now(),
 				UpdateAt:  time.Now(),
+
 			}
 
 			mu.Lock()

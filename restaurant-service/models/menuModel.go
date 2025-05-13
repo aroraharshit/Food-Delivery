@@ -3,7 +3,6 @@ package models
 import (
 	"mime/multipart"
 	"time"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -36,6 +35,7 @@ type AddDishesInsert struct {
 	Discount     float64            `bson:"discount"`
 	CreatedAt    time.Time          `bson:"createdAt"`
 	UpdateAt     time.Time          `bson:"updatedAt"`
+
 }
 
 type AddDishesInsertPayload struct {

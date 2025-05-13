@@ -63,6 +63,7 @@ func main() {
 	userCollection := client.Database("DBName").Collection("users")
 
 	userService := service.NewUserService(service.UserServiceOptions{
+		Ctx:            ctx,
 		UserCollection: userCollection,
 	})
 
