@@ -3,6 +3,7 @@ package models
 import (
 	"mime/multipart"
 	"time"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AddDishRequest struct {
@@ -23,16 +24,18 @@ type AddDishes struct {
 }
 
 type AddDishesInsert struct {
-	Name        string    `bson:"name"`
-	Price       float64   `bson:"price"`
-	Category    string    `bson:"category"`
-	IsAvailable bool      `bson:"isAvailable"`
-	Image       string    `bson:"image"`
-	Rating      float64   `bson:"rating"`
-	Serves      int       `bson:"serves"`
-	Discount    float64   `bson:"discount"`
-	CreatedAt   time.Time `bson:"createdAt"`
-	UpdateAt    time.Time `bson:"updatedAt"`
+	RestaurantId primitive.ObjectID `bson:"restaurant_id"`
+	Name         string             `bson:"name"`
+	Price        float64            `bson:"price"`
+	Category     string             `bson:"category"`
+	IsAvailable  bool               `bson:"isAvailable"`
+	Image        string             `bson:"image"`
+	Rating       float64            `bson:"rating"`
+	Serves       int                `bson:"serves"`
+	Discount     float64            `bson:"discount"`
+	CreatedAt    time.Time          `bson:"createdAt"`
+	UpdateAt     time.Time          `bson:"updatedAt"`
+
 }
 
 type AddDishesInsertPayload struct {

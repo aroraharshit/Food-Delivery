@@ -35,6 +35,12 @@ func NewMenuService(opts MenuServiceOptions) MenuService {
 }
 
 func (ms *MenuServiceImpl) AddDishes(ctx context.Context, req *models.AddDishRequest) (*models.AddDishesResponse, error) {
+	restaurantId := req.RestaurantId
+	restaurantIdPrimitive, err := primitive.ObjectIDFromHex(restaurantId)
+	if err != nil {
+		return &models.AddDishesResponse{}, err
+	}
+
 	isRestaurantExist, err := ms.IsRestaurantExist(ctx, req.RestaurantId)
 	if err != nil {
 		return &models.AddDishesResponse{}, err
@@ -45,8 +51,8 @@ func (ms *MenuServiceImpl) AddDishes(ctx context.Context, req *models.AddDishReq
 	}
 
 	dishesNames := []string{}
-	insertOps := []mongo.WriteModel{} 
-
+	insertOps := []mongo.WriteModel{}
+  
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
@@ -63,18 +69,19 @@ func (ms *MenuServiceImpl) AddDishes(ctx context.Context, req *models.AddDishReq
 				return
 			}
 
-
 			newDish := models.AddDishesInsert{
-				Name:        d.Name,
-				Price:       d.Price,
-				Category:    d.Category,
-				IsAvailable: d.IsAvailable,
+				RestaurantId: restaurantIdPrimitive,
+				Name:         d.Name,
+				Price:        d.Price,
+				Category:     d.Category,
+				IsAvailable:  d.IsAvailable,
 				Image:       imageUrl,
-				Rating:      d.Rating,
-				Serves:      d.Serves,
-				Discount:    d.Discount,
-				CreatedAt:   time.Now(),
-				UpdateAt:    time.Now(),
+				Rating:    d.Rating,
+				Serves:    d.Serves,
+				Discount:  d.Discount,
+				CreatedAt: time.Now(),
+				UpdateAt:  time.Now(),
+
 			}
 
 			mu.Lock()
